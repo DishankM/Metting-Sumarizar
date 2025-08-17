@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>AI Meeting Summarizer</title>
+    <style>
+        /* Global styles */
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #eef2f7, #fdfdff);
+            color: #333;
+            margin: 0;
+            padding: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: #fff;
+            padding: 30px 40px;
+            border-radius: 16px;
+            box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.08);
+            width: 800px;
+            max-width: 95%;
+            animation: fadeIn 0.6s ease-in-out;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #4b0082;
+            font-size: 1.8rem;
+        }
+
+        label {
+            font-weight: 600;
+            display: block;
+            margin-top: 20px;
+            margin-bottom: 6px;
+            color: #444;
+        }
+
+        input[type="file"],
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 15px;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #6c63ff;
+            box-shadow: 0 0 0 2px rgba(108, 99, 255, 0.2);
+        }
+
+        textarea {
+            resize: vertical;
+            line-height: 1.5;
+        }
+
+        .btn {
+            display: inline-block;
+            margin-top: 20px;
+            margin-right: 10px;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            background: linear-gradient(135deg, #6c63ff, #4b0082);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0px 6px 15px rgba(108, 99, 255, 0.3);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>AI-Powered Meeting Notes Summarizer</h1>
+
+        <label for="transcript_file">Upload Transcript (text file):</label>
+        <input type="file" id="transcript_file" accept=".txt">
+
+        <label for="prompt">Custom Prompt:</label>
+        <input type="text" id="prompt" placeholder="e.g., Summarize in bullet points for executives">
+
+        <button class="btn" onclick="generateSummary()">Generate Summary</button>
+
+        <label for="summary">Generated Summary (editable):</label>
+        <textarea id="summary" rows="12"></textarea>
+
+        <label for="recipients">Recipient Emails:</label>
+        <input type="text" id="recipients" placeholder="Enter emails, comma-separated">
+
+        <button class="btn" onclick="shareSummary()">Share via Email</button>
+    </div>
+
+    <script>
+        async function generateSummary() {
+            const file = document.getElementById('transcript_file').files[0];
+            if (!file) {
+                alert('Please upload a transcript file.');
+                return;
+            }
+            const prompt = document.getElementById('prompt').value;
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('prompt', prompt);
+
+            try {
+                const response = await fetch('/generate', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    document.getElementById('summary').value = data.summary;
+                }
+            } catch (error) {
+                alert('Error generating summary: ' + error);
+            }
+        }
+
+        async function shareSummary() {
+            const summary = document.getElementById('summary').value;
+            const recipients = document.getElementById('recipients').value;
+
+            if (!summary || !recipients) {
+                alert('Please provide a summary and recipients.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/share', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ summary, recipients })
+                });
+                const data = await response.json();
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    alert('Email sent successfully!');
+                }
+            } catch (error) {
+                alert('Error sharing summary: ' + error);
+            }
+        }
+    </script>
+</body>
+
+</html>
